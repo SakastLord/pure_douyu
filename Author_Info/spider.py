@@ -25,8 +25,13 @@ class driveSpider:
 
 
     def getItem(self):
+        for i in range(100):
+            try:
+                self.driver.get(self.site_url)
+                break
+            except Exception as e:
+                print(e)
 
-        self.driver.get(self.site_url)
         time.sleep(self.sleep_time)
         html = self.driver.page_source.encode('utf-8')
         selector = etree.HTML(html)
@@ -83,8 +88,16 @@ class driveSpider:
         except:
             main_url = ''
             print('主页收集失败')
-
-        self.driver.get(main_url)
+        hashname = main_url[27:]
+        f = open('zhubo_home.txt', 'a')
+        f.write(main_url + '\n')
+        f.close()
+        for i in range(100):
+            try:
+                self.driver.get(main_url)
+                break
+            except Exception as e:
+                print(e)
         html = self.driver.page_source.encode('utf-8')
         selector = etree.HTML(html)
 
@@ -102,7 +115,7 @@ class driveSpider:
             bofang_num=''
             print('错误')
         self.driver.quit()
-        return paiming, guanzhu, shipin_num, bofang_num,shuiyou,jingyan,dianfeng
+        return paiming, guanzhu, shipin_num, bofang_num,shuiyou,jingyan,dianfeng,hashname
 
     def run(self):
         self.getItem()

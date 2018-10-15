@@ -69,7 +69,7 @@ class douyu_host_info():
         data={}
         time.sleep(0.2)
         print('Now start open {}'.format(url))
-        for i in range(3):
+        for i in range(100):
             try:
                 wb_data = requests.get(url, headers=self.headers)
                 break
@@ -100,25 +100,31 @@ class douyu_host_info():
             roomUrl = 'https://www.douyu.com/' + data['房间id']
             dy = driveSpider(roomUrl)
             #获取主播的hashname，可用于获取主页信息，视频信息
-            authorurl = requests.get('https://www.douyu.com/swf_api/getRoomRecordStatus/%s'%(data['房间id'])).json()['data']['authorurl']
-            data['hashname'] = authorurl[27:]
-            if len(authorurl)>0:
-                f = open('zhubo_home.txt', 'a')
-                f.write(authorurl + '\n')
-                f.close()
-            data['周排名'], data['关注数目'], data['视频数目'], data['播放总量'], data['水友数目'],data['经验值'],data['巅峰值'] = dy.getItem()
+           # authorurl = requests.get('https://www.douyu.com/swf_api/getRoomRecordStatus/%s'%(data['房间id'])).json()['data']['authorurl']
+            #data['hashname'] = authorurl[27:]
+           # if len(authorurl)>0:
+
+            data['周排名'], data['关注数目'], data['视频数目'], data['播放总量'], data['水友数目'],data['经验值'],data['巅峰值'],data['hashname'] = dy.getItem()
             data.update(self.get_zhibo_info(data['房间id']))
             self.write_to_zhubo(data)
-        if dic[url[22:]] !='/':
-            self.get_zhubo_byApi()
+        if dic[url[21:]] !='/':
+            self.get_zhubo_byApi(dic[url[21:]])
 
 
-    def get_zhubo_byApi(self):
+    def get_zhubo_byApi(self,url):
         i = 2
         while True:
-            apiUrl = 'https://www.douyu.com/gapi/rkc/directory/2_19/%i' % (i)
+
+            apiUrl = 'https://www.douyu.com/gapi/rkc/directory/%s/%i' % (url,i)
             print('当前第%i页' % (i))
-            apiData = requests.get(apiUrl, headers=self.headers).json()['data']
+
+            for i in range(100):
+                try:
+                    apiData = requests.get(apiUrl, headers=self.headers).json()['data']
+                    break
+                except:
+                    print('net work error! will retry 3 times')
+            #apiData = requests.get(apiUrl, headers=self.headers).json()['data']
             pageNum = apiData['pgcnt']
             print('一共%i页' % (pageNum))
             apiData = apiData['rl']
@@ -134,11 +140,20 @@ class douyu_host_info():
                 roomUrl = 'https://www.douyu.com/' + str(data['房间id'])
                 print(roomUrl)
                 dy = driveSpider(roomUrl)
-                tmp_data['周排名'], tmp_data['关注数目'], tmp_data['视频数目'], tmp_data['播放总量'], tmp_data['水友数目'] = dy.getItem()
+                tmp_data['周排名'], tmp_data['关注数目'], tmp_data['视频数目'], tmp_data['播放总量'], tmp_data['水友数目'], tmp_data['经验值'],tmp_data['巅峰值'],tmp_data['hashname']= dy.getItem()
                 data = tmp_data
                 data.update(self.get_zhibo_info(data['房间id']))
 
-                authorurl = requests.get('https://www.douyu.com/swf_api/getRoomRecordStatus/%s' % (data['房间id'])).json()['data']['authorurl']
+                for i in range(100):
+                    try:
+                        authorurl = \
+                        requests.get('https://www.douyu.com/swf_api/getRoomRecordStatus/%s' % (data['房间id'])).json()[
+                            'data']['authorurl']
+                        break
+                    except:
+                        print('net work error! will retry 3 times')
+
+                #authorurl = requests.get('https://www.douyu.com/swf_api/getRoomRecordStatus/%s' % (data['房间id'])).json()['data']['authorurl']
                 data['hashname'] = authorurl[27:]
                 if len(authorurl)>0:
                     f = open('zhubo_home.txt', 'a')
@@ -161,7 +176,14 @@ class douyu_host_info():
     def get_zhibo_info(self,href):
 
         apiUrl = 'http://open.douyucdn.cn/api/RoomApi/room/' + href
-        apiData = requests.get(apiUrl, headers=self.headers).json()['data']
+
+        for i in range(100):
+            try:
+                apiData = requests.get(apiUrl, headers=self.headers).json()['data']
+                break
+            except:
+                print('net work error! will retry 3 times')
+        #apiData = requests.get(apiUrl, headers=self.headers).json()['data']
         try:
             zhibo_data = {
                 '最近开播时间': apiData['start_time'],

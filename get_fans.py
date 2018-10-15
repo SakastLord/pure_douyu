@@ -20,18 +20,24 @@ def get_fans(url_list):
     }
     for url in url_list:
         host ='https://www.douyu.com/%s'%(url)
-        driver.get(host)
+
+        for i in range(100):
+            try:
+                driver.get(host)
+                break
+            except Exception as e:
+                print(e)
         time.sleep(sleep_time)
         html = driver.page_source.encode('utf-8')
         selector = etree.HTML(html)
-        fans_list = selector.xpath('//*[@id="mCSB_3_container"]/ul/li')
+        fans_list = selector.xpath('//*[@id="mCSB_3_container"]/ul')
+        print(len(fans_list))
         for fan in fans_list:
             fan_text = fan.xpath('/text()')
             print(fan_text)
             f = open('fans_info.csv', 'a', newline="", encoding="utf-8")
             v = csv.writer(f)
             v.writerow(fan_text)
-
             f.close()
 
 
